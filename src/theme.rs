@@ -1,5 +1,11 @@
 use crossterm::style::Color;
 
+/// Theme is a simple theme provider. This structure is nothing special. It
+/// simply holds some general styling information and can be inserted as a
+/// resource into the application.
+///
+/// If you would like to use different style names just make your own structure
+/// which meets your needs and  add it as a resource with App::insert_resource.  
 #[derive(Debug)]
 pub struct Theme {
     pub bg_primary: Color,

@@ -7,7 +7,6 @@ mod runes;
 pub mod symbols;
 mod theme;
 mod view;
-mod widget;
 
 pub mod prelude {
     pub use super::{
@@ -18,7 +17,6 @@ pub mod prelude {
         input::Keyboard,
         runes::{Rune, Runes, ToRuneExt},
         theme::Theme,
-        widget::Widget,
     };
     pub use crossterm::event::KeyCode;
     pub use crossterm::style::Color;

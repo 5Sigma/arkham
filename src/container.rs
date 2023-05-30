@@ -12,50 +12,75 @@ pub enum ArkhamState {
     Noop,
 }
 
+/// The container stores typed resource and state objects and provides
+/// them to component functions.
 #[derive(Default)]
 pub struct Container {
     bindings: HashMap<TypeId, Box<dyn Any>>,
 }
 
 impl Container {
-    pub fn bind<T: Any>(&mut self, val: T) {
+    /// insert a type binding into the container. This is used to provide an
+    /// object to functions executed by Container::call.
+    ///
+    /// App::insert_ressource and App::isnert_state proxies to this function.
+    pub(crate) fn bind<T: Any>(&mut self, val: T) {
         self.bindings.insert(val.type_id(), Box::new(val));
     }
 
+    /// Get an object from the store by its type. This is a utility function
+    /// to extract an object directly, instead of using the container to
+    /// inject objects into a function's arguments.
     pub fn get<T: Any>(&self) -> Option<&T> {
         self.bindings
             .get(&TypeId::of::<T>())
             .and_then(|boxed| boxed.downcast_ref())
     }
 
+    /// Call a function while providing dependency injcetion.
     pub fn call<F, Args>(&self, view: &mut ViewContext, callable: &F)
     where
         F: Callable<Args>,
         Args: FromContainer,
     {
-        callable.call(view, Args::from_container(self));
+        let _ = callable.call(view, Args::from_container(self));
     }
 }
 
-pub trait Callable<Args> {
-    fn call(&self, view: &mut ViewContext, args: Args) -> ArkhamResult;
-}
-
-pub trait FromContainer {
-    fn from_container(container: &Container) -> Self;
-}
-
+/// A wrapper for state objcets. This internally holds a reference counted
+/// poitner to the object and is used when injecting itno functions.
 pub struct State<T: ?Sized>(Rc<RefCell<T>>);
 
 impl<T> State<T> {
+    /// Create a new state wrapper.
     pub fn new(val: T) -> Self {
         State(Rc::new(RefCell::new(val)))
     }
 
+    /// Returns a mutable reference to the underlying state object.
+    ///
+    /// Example:
+    /// ```
+    /// use arkham::prelude::*;
+    /// struct MyState(i32);
+    ///
+    /// let state = State::new(MyState(4));
+    /// state.get_mut().0 = 6;
+    /// assert_eq!(state.get().0, 6);
+    /// ```
     pub fn get_mut(&self) -> std::cell::RefMut<T> {
         RefCell::borrow_mut(&self.0)
     }
 
+    // Returns an immutable reference to the underlying state object.
+    /// Example:
+    /// ```
+    /// use arkham::prelude::*;
+    /// struct MyState(i32);
+    ///
+    /// let state = State::new(MyState(4));
+    /// assert_eq!(state.get().0, 4);
+    /// ```
     pub fn get(&self) -> std::cell::Ref<T> {
         RefCell::borrow(&self.0)
     }
@@ -73,6 +98,9 @@ impl<T: ?Sized + 'static> FromContainer for State<T> {
     }
 }
 
+/// A wrapper for resources stored within the app. This wrapper is returned
+/// when objects are injected into component functions and provide immutable
+/// access
 #[derive(Debug)]
 pub struct Res<T: ?Sized>(Rc<T>);
 
@@ -117,6 +145,19 @@ where
         (self)(view);
         Ok(ArkhamState::Noop)
     }
+}
+
+/// Callable must be implemented for functions that can be used as component
+/// functions. They are given a ViewContext for the component function and
+/// injectable arguments.
+pub trait Callable<Args> {
+    fn call(&self, view: &mut ViewContext, args: Args) -> ArkhamResult;
+}
+
+/// FromContainer must be implmented for objects that can be injected into
+/// component functions. This includes the Res and State structs.
+pub trait FromContainer {
+    fn from_container(container: &Container) -> Self;
 }
 
 impl FromContainer for () {

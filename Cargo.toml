@@ -3,7 +3,25 @@ name = "arkham"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[example]]
+name = "simple"
+path = "examples/simple.rs"
+
+[[example]]
+name = "component_functions"
+path = "examples/component_functions.rs"
+
+[[example]]
+name = "theme"
+path = "examples/theme.rs"
+
+[[example]]
+name = "component_params"
+path = "examples/component_params.rs"
+
+[[example]]
+name = "keyboard"
+path = "examples/keyboard.rs"
 
 [dependencies]
 anyhow = "1.0.71"

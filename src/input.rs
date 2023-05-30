@@ -2,6 +2,9 @@ use std::{cell::RefCell, rc::Rc};
 
 use crossterm::event::KeyCode;
 
+/// Keyboard can be used as an injectable resource that provides information
+/// about the current keyboard state. This is the primary mechanism by which
+/// applications can respond to keyboard input from users.
 #[derive(Debug, Default)]
 pub struct Keyboard {
     key: Rc<RefCell<Option<KeyCode>>>,

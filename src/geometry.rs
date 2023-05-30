@@ -1,5 +1,6 @@
 use std::ops::{Add, Sub};
 
+/// Pos represents a coordinate position within the termianl screen.
 #[derive(Debug, Clone, Copy)]
 pub struct Pos {
     pub x: usize,
@@ -21,6 +22,7 @@ impl From<usize> for Pos {
     }
 }
 
+// An area that can be operated on.
 #[derive(Debug, Clone, Copy)]
 pub struct Size {
     pub width: usize,
@@ -98,6 +100,8 @@ impl From<(i32, i32)> for Size {
     }
 }
 
+/// An area of the screen with a given size and postiion. The position
+/// represents the top-left corner of the rectangle.
 #[derive(Debug, Clone, Copy)]
 pub struct Rect {
     pub pos: Pos,

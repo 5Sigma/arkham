@@ -3,6 +3,8 @@ use crossterm::{
     style::{Attribute, Color, Print, SetAttribute, SetBackgroundColor, SetForegroundColor},
 };
 
+/// Rune repesents the state of the screen at a specific position. It stores
+/// the character content and styling information that will be rendered.
 #[derive(Clone, Copy, Default, Eq, PartialEq)]
 pub struct Rune {
     pub content: Option<char>,
@@ -61,6 +63,8 @@ impl Rune {
     }
 }
 
+/// Runes represetns a series of runes. This is generally used to convert
+/// strings into Runes and apply styling information to them.
 #[derive(Clone, Debug)]
 pub struct Runes(Vec<Rune>);
 

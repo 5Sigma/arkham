@@ -1,9 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{
-    container::{Callable, FromContainer},
-    widget::Widget,
-};
+use crate::container::{Callable, FromContainer};
 
 use super::{
     container::Container,
@@ -12,6 +9,9 @@ use super::{
     view::View,
 };
 
+/// ViewContext represents the display context for a given area.
+/// it maintains the drawing state for the region internally and is used
+/// to generate a final view that is eventually rendered.
 pub struct ViewContext {
     pub view: View,
     pub container: Rc<RefCell<Container>>,
@@ -32,28 +32,34 @@ impl std::ops::Deref for ViewContext {
 }
 
 impl ViewContext {
+    /// Constructs a new ViewConext for a given area.  A container reference
+    /// must also be passedo, so that component functions called
+    /// from the context are injectable.
     pub fn new(container: Rc<RefCell<Container>>, size: Size) -> Self {
         let view = View::new(size);
 
         Self { view, container }
     }
 
-    pub fn component<F, Args>(&mut self, rect: Rect, f: F)
+    /// Execute a component function. The passed function will receive a new
+    /// ViewContext for its size and can be injected with arguments.
+    /// The context given to the component function will then be applied to
+    /// the parent ViewContext at a given position.
+    pub fn component<F, Args, R>(&mut self, rect: R, f: F)
     where
         F: Callable<Args>,
         Args: FromContainer,
+        R: Into<Rect>,
     {
+        let rect = rect.into();
         let mut context = ViewContext::new(self.container.clone(), rect.size);
         self.container.borrow().call(&mut context, &f);
         self.view.apply(rect.pos, context.view);
     }
 
-    pub fn widget(&mut self, rect: Rect, mut widget: impl Widget) {
-        let mut context = ViewContext::new(self.container.clone(), rect.size);
-        widget.ui(&mut context);
-        self.view.apply(rect.pos, context.view);
-    }
-
+    /// Set a specific rune to a specific position. This function can be used
+    /// to set a signle character. To set multiple runes at a time see the
+    /// View::insert function.
     pub fn set_rune<P>(&mut self, pos: P, rune: Rune)
     where
         P: Into<Pos>,
