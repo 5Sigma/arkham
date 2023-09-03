@@ -1,6 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::container::{Callable, FromContainer};
+use crate::{
+    container::{Callable, FromContainer},
+    stack::Stack,
+};
 
 use super::{
     container::Container,
@@ -15,6 +18,7 @@ use super::{
 pub struct ViewContext {
     pub view: View,
     pub container: Rc<RefCell<Container>>,
+    pub(crate) rerender: bool,
 }
 
 impl std::ops::DerefMut for ViewContext {
@@ -38,7 +42,35 @@ impl ViewContext {
     pub fn new(container: Rc<RefCell<Container>>, size: Size) -> Self {
         let view = View::new(size);
 
-        Self { view, container }
+        Self {
+            view,
+            container,
+            rerender: false,
+        }
+    }
+
+    /// Notify the application to rerender the view. This is useful after a
+    /// state change that might affect other views.  
+    pub fn render(&mut self) {
+        self.rerender = true;
+    }
+
+    pub fn vertical_stack(&self, size: Size) -> Stack {
+        Stack {
+            direction: crate::stack::StackDirection::Vertical,
+            container: self.container.clone(),
+            view: View::new(size),
+            position: Pos::from(0),
+        }
+    }
+
+    pub fn horizontal_stack(&self, size: Size) -> Stack {
+        Stack {
+            direction: crate::stack::StackDirection::Horizontal,
+            container: self.container.clone(),
+            view: View::new(size),
+            position: Pos::from(0),
+        }
     }
 
     /// Execute a component function. The passed function will receive a new
@@ -53,8 +85,10 @@ impl ViewContext {
     {
         let rect = rect.into();
         let mut context = ViewContext::new(self.container.clone(), rect.size);
-        self.container.borrow().call(&mut context, &f);
-        self.view.apply(rect.pos, context.view);
+        let args = Args::from_container(&self.container.borrow());
+        f.call(&mut context, args);
+        self.view.apply(rect.pos, &context.view);
+        self.rerender = context.rerender;
     }
 
     /// Set a specific rune to a specific position. This function can be used

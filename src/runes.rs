@@ -1,6 +1,8 @@
 use crossterm::{
     queue,
-    style::{Attribute, Color, Print, SetAttribute, SetBackgroundColor, SetForegroundColor},
+    style::{
+        Attribute, Color, Print, ResetColor, SetAttribute, SetBackgroundColor, SetForegroundColor,
+    },
 };
 
 /// Rune repesents the state of the screen at a specific position. It stores
@@ -17,6 +19,25 @@ impl std::fmt::Debug for Rune {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct(&format!("Rn({})", self.content.unwrap_or_default()))
             .finish()
+    }
+}
+
+impl std::ops::Add<Rune> for Rune {
+    type Output = Rune;
+
+    fn add(self, mut rhs: Rune) -> Self::Output {
+        rhs.fg = rhs.fg.or(self.fg);
+        rhs.bg = rhs.bg.or(self.bg);
+        rhs
+    }
+}
+
+impl From<char> for Rune {
+    fn from(value: char) -> Self {
+        Rune {
+            content: Some(value),
+            ..Default::default()
+        }
     }
 }
 
@@ -48,6 +69,7 @@ impl Rune {
         W: std::io::Write,
     {
         if let Some(content) = self.content {
+            queue!(out, ResetColor)?;
             if let Some(c) = self.fg {
                 queue!(out, SetForegroundColor(c))?;
             }
@@ -65,7 +87,7 @@ impl Rune {
 
 /// Runes represetns a series of runes. This is generally used to convert
 /// strings into Runes and apply styling information to them.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Runes(Vec<Rune>);
 
 impl std::ops::Deref for Runes {
@@ -73,6 +95,12 @@ impl std::ops::Deref for Runes {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl From<Rune> for Runes {
+    fn from(value: Rune) -> Self {
+        Runes::new(vec![value])
     }
 }
 
@@ -89,12 +117,20 @@ impl<T: ToString> From<T> for Runes {
 }
 
 impl Runes {
-    pub fn fg(mut self, color: Color) -> Self {
+    pub fn new(runes: Vec<Rune>) -> Self {
+        Self(runes)
+    }
+    pub fn fg(self, color: Color) -> Self {
+        self.set_fg(Some(color))
+    }
+
+    pub fn set_fg(mut self, color: Option<Color>) -> Self {
         for r in self.0.iter_mut() {
-            r.fg = Some(color);
+            r.fg = color;
         }
         self
     }
+
     pub fn bg(mut self, color: Color) -> Self {
         for r in self.0.iter_mut() {
             r.bg = Some(color);
@@ -106,6 +142,13 @@ impl Runes {
             r.bold = true;
         }
         self
+    }
+
+    pub fn add<R>(&mut self, runes: R)
+    where
+        R: Into<Runes>,
+    {
+        self.0.append(&mut runes.into().0);
     }
 }
 

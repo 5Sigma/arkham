@@ -8,7 +8,7 @@ use crate::{
 /// A renderable region. View stores the renderable state of an area of the
 /// screen. Views can be combined together to achieve a finalized view that
 /// repsresents the entire screens next render.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct View(pub Vec<Vec<Rune>>);
 
 impl std::ops::DerefMut for View {
@@ -41,13 +41,14 @@ impl View {
     }
 
     /// Apply another view onto this view at a given position.
-    pub fn apply<P: Into<Pos>>(&mut self, pos: P, view: View) {
+    pub fn apply<P: Into<Pos>>(&mut self, pos: P, view: &View) {
         let pos = pos.into();
         for (y, line) in view.0.iter().enumerate() {
             if self.0.len() > y + pos.y {
                 for (x, rune) in line.iter().enumerate() {
                     if rune.content.is_some() && self.0[y].len() > x + pos.x {
-                        let _ = std::mem::replace(&mut self.0[y + pos.y][x + pos.x], *rune);
+                        let rune = (self.0[y + pos.y][x + pos.x]) + *rune;
+                        let _ = std::mem::replace(&mut self.0[y + pos.y][x + pos.x], rune);
                     }
                 }
             }
@@ -108,7 +109,8 @@ impl View {
                 .take((line_len - x as i32).max(0) as usize)
                 .enumerate()
             {
-                let _ = std::mem::replace(&mut line[x + i], *c);
+                let rune = line[x + i] + *c;
+                let _ = std::mem::replace(&mut line[x + i], rune);
             }
         }
     }
@@ -172,7 +174,7 @@ mod tests {
         let mut view1 = View::new((3, 4));
         view1.fill(Rect::new((1, 1), (2, 2)), Rune::new().content('X'));
         let mut view2 = View::new((3, 4));
-        view2.apply((0, 1), view1);
+        view2.apply((0, 1), &view1);
         dbg!(&view2.0);
         assert_eq!(view2.0[0][0].content, None);
         assert_eq!(view2.0[0][1].content, None);
@@ -196,7 +198,7 @@ mod tests {
         let mut view0 = View::new((5, 5));
         view0.fill(Rect::new((1, 1), (4, 4)), Rune::new().content('X'));
         let mut view = View::new((3, 3));
-        view.apply((0, 0), view0);
+        view.apply((0, 0), &view0);
         dbg!(&view.0);
         assert_eq!(view.0[0][0].content, None);
         assert_eq!(view.0[0][1].content, None);

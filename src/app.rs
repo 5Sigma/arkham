@@ -43,13 +43,8 @@ where
             container,
             root,
             main_view,
-            args: PhantomData::default(),
+            args: PhantomData,
         }
-    }
-
-    /// Used to change the root function that is used during each render cycle.
-    pub fn change_root(&mut self, root: F) {
-        self.root = root;
     }
 
     /// Insert a resource which can be injected into component functions.
@@ -131,12 +126,19 @@ where
         terminal::enable_raw_mode()?;
 
         loop {
-            let mut context =
-                ViewContext::new(self.container.clone(), terminal::size().unwrap().into());
+            loop {
+                let mut context =
+                    ViewContext::new(self.container.clone(), terminal::size().unwrap().into());
 
-            self.container.borrow().call(&mut context, &self.root);
-            self.main_view.apply((0, 0), context.view);
-            self.render()?;
+                self.root
+                    .call(&mut context, Args::from_container(&self.container.borrow()));
+                self.main_view.apply((0, 0), &context.view);
+                self.render()?;
+
+                if !context.rerender {
+                    break;
+                }
+            }
 
             self.container
                 .borrow()

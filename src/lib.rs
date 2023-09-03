@@ -1,9 +1,12 @@
 mod app;
+pub mod components;
 mod container;
 mod context;
 mod geometry;
 mod input;
+mod plugins;
 mod runes;
+mod stack;
 pub mod symbols;
 mod theme;
 mod view;

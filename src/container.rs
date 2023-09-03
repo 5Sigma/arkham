@@ -7,14 +7,10 @@ use std::{
 };
 
 use crate::context::ViewContext;
-type ArkhamResult = anyhow::Result<ArkhamState>;
-pub enum ArkhamState {
-    Noop,
-}
 
 /// The container stores typed resource and state objects and provides
 /// them to component functions.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Container {
     bindings: HashMap<TypeId, Box<dyn Any>>,
 }
@@ -35,15 +31,6 @@ impl Container {
         self.bindings
             .get(&TypeId::of::<T>())
             .and_then(|boxed| boxed.downcast_ref())
-    }
-
-    /// Call a function while providing dependency injcetion.
-    pub fn call<F, Args>(&self, view: &mut ViewContext, callable: &F)
-    where
-        F: Callable<Args>,
-        Args: FromContainer,
-    {
-        let _ = callable.call(view, Args::from_container(self));
     }
 }
 
@@ -136,22 +123,21 @@ impl<T: ?Sized + 'static> FromContainer for Res<T> {
     }
 }
 
+/// Callable must be implemented for functions that can be used as component
+/// functions. They are given a ViewContext for the component function and
+/// injectable arguments.
+pub trait Callable<Args> {
+    fn call(&self, view: &mut ViewContext, args: Args);
+}
+
 impl<Func> Callable<()> for Func
 where
     Func: Fn(&mut ViewContext),
 {
     #[inline]
-    fn call(&self, view: &mut ViewContext, _args: ()) -> ArkhamResult {
+    fn call(&self, view: &mut ViewContext, _args: ()) {
         (self)(view);
-        Ok(ArkhamState::Noop)
     }
-}
-
-/// Callable must be implemented for functions that can be used as component
-/// functions. They are given a ViewContext for the component function and
-/// injectable arguments.
-pub trait Callable<Args> {
-    fn call(&self, view: &mut ViewContext, args: Args) -> ArkhamResult;
 }
 
 /// FromContainer must be implmented for objects that can be injected into
@@ -172,9 +158,8 @@ macro_rules! callable_tuple ({ $($param:ident)* } => {
     {
         #[inline]
         #[allow(non_snake_case)]
-        fn call(&self, view: &mut ViewContext , ($($param,)*): ($($param,)*)) -> ArkhamResult{
+        fn call(&self, view: &mut ViewContext , ($($param,)*): ($($param,)*)) {
             (self)(view, $($param,)*);
-            Ok(ArkhamState::Noop)
         }
     }
 });
@@ -217,18 +202,3 @@ tuple_from_tm! { A B C D E F G H I }
 tuple_from_tm! { A B C D E F G H I J }
 tuple_from_tm! { A B C D E F G H I J K }
 tuple_from_tm! { A B C D E F G H I J K L }
-
-#[cfg(test)]
-mod tests {
-    use std::{cell::RefCell, rc::Rc};
-
-    use crate::{container::Container, prelude::ViewContext};
-
-    #[test]
-    fn test_no_params() {
-        fn test_f(_ctx: &mut ViewContext) {}
-        let container = Rc::new(RefCell::new(Container::default()));
-        let mut ctx = ViewContext::new(container.clone(), (1, 1).into());
-        container.borrow().call(&mut ctx, &test_f);
-    }
-}
