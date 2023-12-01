@@ -1,7 +1,10 @@
 [package]
 name = "arkham"
-version = "0.3.0"
+version = "0.2.0"
 edition = "2021"
+description = "TUI made simple"
+authors = ["Joe Bellus"]
+license = "MIT"
 
 [[example]]
 name = "simple"
