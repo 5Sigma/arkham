@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-#[cfg(any(not(windows), all(windows)))]
 mod universal {
     pub const TICK: char = '✔';
     pub const CROSS: char = '✖';
@@ -61,11 +60,9 @@ mod universal {
     pub const SEVEN_EIGHTHS: char = '⅞';
 }
 
-#[cfg(any(not(windows), all(windows)))]
 pub use universal::*;
 
-#[cfg(all(windows))]
-mod win {
+pub mod win {
     pub const TICK: char = '√';
     pub const CROSS: char = '×';
     pub const STAR: char = '*';
@@ -89,6 +86,3 @@ mod win {
     pub const QUESTION_MARK_PREFIX: char = '？';
     pub const ONE_HALF: char = ' ';
 }
-
-#[cfg(all(windows))]
-pub use win::*;

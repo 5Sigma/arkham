@@ -13,7 +13,7 @@ mod view;
 
 pub mod prelude {
     pub use super::{
-        app::{App, Terminal},
+        app::{App, Renderer, Terminal},
         container::{Callable, FromContainer, Res, State},
         context::ViewContext,
         geometry::{Pos, Rect, Size},

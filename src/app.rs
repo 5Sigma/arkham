@@ -1,4 +1,12 @@
-use std::{any::Any, cell::RefCell, io::Write, marker::PhantomData, rc::Rc};
+use std::{
+    any::Any,
+    cell::RefCell,
+    io::Write,
+    marker::PhantomData,
+    rc::Rc,
+    sync::mpsc::{channel, Receiver, Sender},
+    time::Duration,
+};
 
 use crossterm::{
     cursor,
@@ -14,6 +22,17 @@ use crate::{
 
 use super::input::Keyboard;
 
+/// A renderer that can signal a render needs to take place.
+pub struct Renderer {
+    tx: Sender<()>,
+}
+
+impl Renderer {
+    pub fn render(&self) {
+        let _ = self.tx.send(());
+    }
+}
+
 /// The app is the core container for the application logic, resources,
 /// state, and run loop.
 pub struct App<F, Args>
@@ -23,6 +42,8 @@ where
 {
     container: Rc<RefCell<Container>>,
     main_view: View,
+    render_signal: Receiver<()>,
+    render_tx: Sender<()>,
     root: F,
     args: PhantomData<Args>,
 }
@@ -39,11 +60,22 @@ where
         let container = Rc::new(RefCell::new(Container::default()));
         let size = terminal::size().unwrap();
         let main_view = View::new(size);
+        let (render_tx, render_signal) = channel();
         App {
             container,
             root,
             main_view,
+            render_tx,
+            render_signal,
             args: PhantomData,
+        }
+    }
+
+    /// Returns a renderer that can signal the application to rerender. This
+    /// renderer can be cloned and passed between threads.
+    pub fn get_renderer(&self) -> Renderer {
+        Renderer {
+            tx: self.render_tx.clone(),
         }
     }
 
@@ -146,23 +178,28 @@ where
                 .unwrap()
                 .reset();
 
-            if let Ok(event) = crossterm::event::read() {
-                match event {
-                    Event::FocusGained => todo!(),
-                    Event::FocusLost => todo!(),
-                    Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
-                        break;
+            if crossterm::event::poll(Duration::from_millis(100)).unwrap_or(false) {
+                if let Ok(event) = crossterm::event::read() {
+                    match event {
+                        Event::FocusGained => self.render()?,
+                        Event::FocusLost => {}
+                        Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
+                            break;
+                        }
+                        Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                            let container = self.container.borrow();
+                            let kb = container.get::<Res<Keyboard>>().unwrap();
+                            kb.set_key(key_event.code);
+                        }
+                        Event::Mouse(_) => todo!(),
+                        Event::Paste(_) => todo!(),
+                        Event::Resize(_, _) => self.render()?,
+                        _ => {}
                     }
-                    Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                        let container = self.container.borrow();
-                        let kb = container.get::<Res<Keyboard>>().unwrap();
-                        kb.set_key(key_event.code);
-                    }
-                    Event::Mouse(_) => todo!(),
-                    Event::Paste(_) => todo!(),
-                    Event::Resize(_, _) => todo!(),
-                    _ => {}
                 }
+            }
+            if self.render_signal.try_recv().is_ok() {
+                self.render()?;
             }
         }
         self.teardown();

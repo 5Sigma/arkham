@@ -1,6 +1,6 @@
 [package]
 name = "arkham"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [[example]]
@@ -37,6 +37,6 @@ path = "examples/paragraph.rs"
 
 [dependencies]
 anyhow = "1.0.71"
-crossterm = "0.26.1"
+crossterm = "0.27"
 ctrlc = "3.3.1"
 textwrap = "0.16.0"

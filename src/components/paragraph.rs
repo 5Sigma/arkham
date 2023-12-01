@@ -1,9 +1,7 @@
-use std::ops::Deref;
-
-use crossterm::style::Color;
-
 use crate::prelude::{Callable, ToRuneExt};
-
+use crossterm::style::Color;
+use std::ops::Deref;
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Paragraph {
     content: String,
@@ -29,7 +27,7 @@ impl Callable<()> for Paragraph {
         let lines = textwrap::wrap(&self.content, view.width());
         let mut stack = view.vertical_stack(view.size());
         for line in lines.iter() {
-            let l = line.deref().to_runes();
+            let _ = line.deref().to_runes();
 
             stack.insert(line);
         }
