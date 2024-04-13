@@ -190,6 +190,7 @@ where
                             let container = self.container.borrow();
                             let kb = container.get::<Res<Keyboard>>().unwrap();
                             kb.set_key(key_event.code);
+                            kb.set_modifiers(key_event.modifiers);
                         }
                         Event::Mouse(_) => todo!(),
                         Event::Paste(_) => todo!(),
