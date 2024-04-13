@@ -171,6 +171,16 @@ impl Rect {
             size: size.into(),
         }
     }
+
+    pub fn translate(&mut self, x: i32, y: i32) {
+        self.pos.x = (self.pos.x as i32 + x).max(0) as usize;
+        self.pos.y = (self.pos.y as i32 + y).max(0) as usize;
+    }
+
+    pub fn expand(&mut self, width: i32, height: i32) {
+        self.size.width = (self.size.width as i32 + width).max(1) as usize;
+        self.size.height = (self.size.height as i32 + height).max(1) as usize;
+    }
 }
 
 impl From<Size> for Rect {
