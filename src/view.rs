@@ -82,11 +82,27 @@ impl View {
 
     /// Fill a region of the view with a single rune, repeating it in every
     /// position.
-    pub fn fill<R>(&mut self, rect: R, rune: Rune)
+    pub fn fill<R, U>(&mut self, rect: R, rune: U)
     where
         R: Into<Rect>,
+        U: Into<Rune>,
     {
         let rect = rect.into();
+        let rune = rune.into();
+        for y in rect.pos.y..(rect.size.height + rect.pos.y).min(self.0.len()) {
+            for x in rect.pos.x..(rect.size.width + rect.pos.x).min(self.0[y].len()) {
+                let _ = std::mem::replace(&mut self.0[y][x], rune);
+            }
+        }
+    }
+
+    /// Fill the entire view context with a rune
+    pub fn fill_all<R>(&mut self, rune: R)
+    where
+        R: Into<Rune>,
+    {
+        let rune = rune.into();
+        let rect = Rect::new((0, 0), self.size());
         for y in rect.pos.y..(rect.size.height + rect.pos.y).min(self.0.len()) {
             for x in rect.pos.x..(rect.size.width + rect.pos.x).min(self.0[y].len()) {
                 let _ = std::mem::replace(&mut self.0[y][x], rune);

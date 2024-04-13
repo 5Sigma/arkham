@@ -41,6 +41,16 @@ impl From<char> for Rune {
     }
 }
 
+impl From<Color> for Rune {
+    fn from(value: Color) -> Self {
+        Rune {
+            content: Some(' '),
+            bg: Some(value),
+            ..Default::default()
+        }
+    }
+}
+
 impl Rune {
     pub fn new() -> Self {
         Self::default()
