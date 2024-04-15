@@ -7,7 +7,13 @@
       pkgs = import nixpkgs { inherit system; };
     in {
       devShells.${system}.default = pkgs.mkShell {
-        packages = [ pkgs.rustc pkgs.cargo pkgs.rust-analyzer pkgs.rustfmt ];
+        packages = [
+          pkgs.rustc
+          pkgs.cargo
+          pkgs.rust-analyzer
+          pkgs.rustfmt
+          pkgs.cargo-watch
+        ];
       };
     };
 }

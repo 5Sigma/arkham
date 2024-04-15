@@ -61,6 +61,7 @@ impl ViewContext {
             container: self.container.clone(),
             view: View::new(size),
             position: Pos::from(0),
+            alignment: crate::stack::StackAlignment::Top,
         }
     }
 
@@ -70,6 +71,7 @@ impl ViewContext {
             container: self.container.clone(),
             view: View::new(size),
             position: Pos::from(0),
+            alignment: crate::stack::StackAlignment::Left,
         }
     }
 
@@ -102,5 +104,18 @@ impl ViewContext {
         if let Some(r) = self.view.get_mut(y).and_then(|row| row.get_mut(x)) {
             *r = rune;
         }
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use std::{cell::RefCell, rc::Rc};
+
+    use crate::container::Container;
+
+    use super::ViewContext;
+
+    pub fn context_fixture() -> ViewContext {
+        ViewContext::new(Rc::new(RefCell::new(Container::default())), (20, 20).into())
     }
 }

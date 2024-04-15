@@ -57,7 +57,7 @@ impl View {
 
     // The width of the view.
     pub fn width(&self) -> usize {
-        self.0.first().unwrap().len()
+        self.0.first().map(|i| i.len()).unwrap_or_default()
     }
 
     /// The height of the view.
@@ -129,6 +129,20 @@ impl View {
                 let _ = std::mem::replace(&mut line[x + i], rune);
             }
         }
+    }
+
+    #[cfg(test)]
+    pub fn render_text(&self) -> String {
+        self.0.iter().fold(String::new(), |mut acc, line| {
+            acc.push_str(
+                &line
+                    .into_iter()
+                    .map(|r| r.content.unwrap_or_default())
+                    .collect::<String>(),
+            );
+            acc.push('\n');
+            acc
+        })
     }
 }
 

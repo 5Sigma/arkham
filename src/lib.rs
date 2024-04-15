@@ -19,8 +19,16 @@ pub mod prelude {
         geometry::{Pos, Rect, Size},
         input::Keyboard,
         runes::{Rune, Runes, ToRuneExt},
+        stack::StackAlignment,
         theme::Theme,
     };
     pub use crossterm::event::KeyCode;
     pub use crossterm::style::Color;
+}
+
+#[cfg(test)]
+pub mod tests {
+    pub fn print_render_text(s: &String) {
+        println!("{}", s.replace('\0', " "));
+    }
 }
