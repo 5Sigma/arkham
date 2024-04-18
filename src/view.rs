@@ -148,6 +148,8 @@ impl View {
 
 #[cfg(test)]
 mod tests {
+    use crossterm::style::Color;
+
     use crate::{geometry::Rect, runes::Rune};
 
     use super::View;
@@ -241,5 +243,14 @@ mod tests {
         assert_eq!(view.0[2][0].content, None);
         assert_eq!(view.0[2][1].content, Some('X'));
         assert_eq!(view.0[2][2].content, Some('X'));
+    }
+
+    #[test]
+    pub fn test_color_fill() {
+        let mut view = View::new((3, 3));
+        view.fill_all(Color::Red);
+        assert!(view
+            .iter()
+            .all(|rs| rs.iter().all(|r| r.bg == Some(Color::Red))));
     }
 }

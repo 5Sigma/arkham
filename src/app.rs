@@ -34,7 +34,21 @@ impl Renderer {
 }
 
 /// The app is the core container for the application logic, resources,
-/// state, and run loop.
+/// state, and run loop.
+///
+/// Setting up a basic application:
+///
+/// ```
+/// use arkham::prelude::*;
+///
+/// fn main() {
+///     App::new(root_view).run();
+/// }
+///
+/// fn root_view(ctx: &mut ViewContext) {
+///     ctx.insert((2,2), "Hello World");
+/// }
+/// ```
 pub struct App<F, Args>
 where
     F: Callable<Args>,
@@ -147,12 +161,14 @@ where
     pub fn run(&mut self) -> anyhow::Result<()> {
         self.container.borrow_mut().bind(Res::new(Terminal));
         self.container.borrow_mut().bind(Res::new(Keyboard::new()));
+
         let _ = ctrlc::set_handler(|| {
             let mut out = std::io::stdout();
             let _ = terminal::disable_raw_mode();
             let _ = execute!(out, terminal::LeaveAlternateScreen, cursor::Show);
             std::process::exit(0);
         });
+
         let mut out = std::io::stdout();
         execute!(out, terminal::EnterAlternateScreen, cursor::Hide)?;
         terminal::enable_raw_mode()?;
