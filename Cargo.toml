@@ -8,7 +8,7 @@ license = "MIT"
 exclude = [
     "docs/*"
 ]
-homepage = "https://5sigma.github.io/arkham"
+homepage = "https://arkham.5sigma.io"
 repository = "https://github.com/5Sigma/arkham"
 readme = "readme.md"
 keywords = ["terminal", "tui", "cli", "console"]

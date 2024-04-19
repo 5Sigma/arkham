@@ -13,7 +13,7 @@
 [![guide](https://github.com/5sigma/arkham/actions/workflows/docs.yml/badge.svg)](https://github.com/5sigma/arkham/actions/workflows/docs.yml)
 [![CI](https://github.com/5sigma/arkham/actions/workflows/ci.yml/badge.svg)](https://github.com/5sigma/arkham/actions/workflows/ci.yml)
 
-[Read The Guide](https://5sigma.github.io/arkham)
+[Read The Guide](https://arkham.5sigma.io)
 
 <!-- prettier-ignore-end -->
   <p>
