@@ -100,7 +100,7 @@ where
     /// state.
     ///
     /// Example:
-    /// ```
+    /// ```no_run
     /// use arkham::prelude::*;
     /// struct MyResource {
     ///   value: i32
@@ -126,7 +126,7 @@ where
     /// is meant to store application state.
     ///
     /// Example:
-    /// ```
+    /// ```no_run
     /// use arkham::prelude::*;
     /// struct MyState {
     ///   value: i32

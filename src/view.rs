@@ -70,16 +70,6 @@ impl View {
         (self.width(), self.height()).into()
     }
 
-    /// Paint is a conveinence method for filling a region ith a given color.
-    /// This is done by using the passed color as the background color and
-    /// filling the region with ' ' characters.
-    pub fn paint<R>(&mut self, rect: R, color: Color)
-    where
-        R: Into<Rect>,
-    {
-        self.fill(rect, Rune::new().content(' ').bg(color));
-    }
-
     /// Fill a region of the view with a single rune, repeating it in every
     /// position.
     pub fn fill<R, U>(&mut self, rect: R, rune: U)

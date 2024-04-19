@@ -5,6 +5,14 @@ edition = "2021"
 description = "TUI made simple"
 authors = ["Joe Bellus"]
 license = "MIT"
+exclude = [
+    "docs/*"
+]
+homepage = "https://5sigma.github.io/arkham"
+repository = "https://github.com/5Sigma/arkham"
+readme = "readme.md"
+keywords = ["terminal", "tui", "cli", "console"]
+categories = ["command-line-interface", "command-line-utilities"]
 
 [[example]]
 name = "simple"
