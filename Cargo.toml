@@ -42,7 +42,17 @@ path = "examples/navigation.rs"
 name = "stack"
 path = "examples/stack.rs"
 
+[[example]]
+name = "external"
+path = "examples/threading.rs"
+required-features = ["sync"]
+
+
 [dependencies]
 anyhow = "1.0.71"
 crossterm = "0.27"
 ctrlc = "3.3.1"
+
+[features]
+sync = []
+default = []

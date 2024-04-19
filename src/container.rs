@@ -1,9 +1,13 @@
+#[cfg(not(feature = "sync"))]
+use std::{cell::RefCell, rc::Rc};
+
+#[cfg(feature = "sync")]
+use std::sync::{Arc, RwLock};
+
 use std::{
     any::{Any, TypeId},
-    cell::RefCell,
     collections::HashMap,
     ops::Deref,
-    rc::Rc,
 };
 
 use crate::context::ViewContext;
@@ -36,10 +40,19 @@ impl Container {
 
 /// A wrapper for state objcets. This internally holds a reference counted
 /// poitner to the object and is used when injecting itno functions.
+#[cfg(not(feature = "sync"))]
 pub struct State<T: ?Sized>(Rc<RefCell<T>>);
+
+#[cfg(feature = "sync")]
+pub struct State<T: ?Sized>(Arc<RwLock<T>>);
 
 impl<T> State<T> {
     /// Create a new state wrapper.
+    #[cfg(feature = "sync")]
+    pub fn new(val: T) -> Self {
+        State(Arc::new(RwLock::new(val)))
+    }
+    #[cfg(not(feature = "sync"))]
     pub fn new(val: T) -> Self {
         State(Rc::new(RefCell::new(val)))
     }
@@ -55,6 +68,11 @@ impl<T> State<T> {
     /// state.get_mut().0 = 6;
     /// assert_eq!(state.get().0, 6);
     /// ```
+    #[cfg(feature = "sync")]
+    pub fn get_mut(&self) -> std::sync::RwLockWriteGuard<T> {
+        self.0.write().unwrap()
+    }
+    #[cfg(not(feature = "sync"))]
     pub fn get_mut(&self) -> std::cell::RefMut<T> {
         RefCell::borrow_mut(&self.0)
     }
@@ -68,6 +86,11 @@ impl<T> State<T> {
     /// let state = State::new(MyState(4));
     /// assert_eq!(state.get().0, 4);
     /// ```
+    #[cfg(feature = "sync")]
+    pub fn get(&self) -> std::sync::RwLockReadGuard<T> {
+        self.0.read().unwrap()
+    }
+    #[cfg(not(feature = "sync"))]
     pub fn get(&self) -> std::cell::Ref<T> {
         RefCell::borrow(&self.0)
     }
@@ -88,10 +111,20 @@ impl<T: ?Sized + 'static> FromContainer for State<T> {
 /// A wrapper for resources stored within the app. This wrapper is returned
 /// when objects are injected into component functions and provide immutable
 /// access
+#[cfg(feature = "sync")]
+#[derive(Debug)]
+pub struct Res<T: ?Sized>(Arc<T>);
+
+#[cfg(not(feature = "sync"))]
 #[derive(Debug)]
 pub struct Res<T: ?Sized>(Rc<T>);
 
 impl<T> Res<T> {
+    #[cfg(feature = "sync")]
+    pub fn new(val: T) -> Self {
+        Res(Arc::new(val))
+    }
+    #[cfg(not(feature = "sync"))]
     pub fn new(val: T) -> Self {
         Res(Rc::new(val))
     }
@@ -109,6 +142,16 @@ impl<T: ?Sized> Clone for Res<T> {
     }
 }
 
+#[cfg(feature = "sync")]
+impl<T: ?Sized> Deref for Res<T> {
+    type Target = Arc<T>;
+
+    fn deref(&self) -> &Arc<T> {
+        &self.0
+    }
+}
+
+#[cfg(not(feature = "sync"))]
 impl<T: ?Sized> Deref for Res<T> {
     type Target = Rc<T>;
 

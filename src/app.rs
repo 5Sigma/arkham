@@ -117,7 +117,14 @@ where
     /// Alternatively, App::insert_state can be used to insert a state object,
     /// that can be borrowed mutable.
     pub fn insert_resource<T: Any>(self, v: T) -> Self {
-        self.container.borrow_mut().bind(Res::new(v));
+        self.bind_resource(Res::new(v))
+    }
+
+    /// Bind an existing resource to the application
+    ///
+    /// Similar to `App::insert_resource` except it accepts an existing resource.
+    pub fn bind_resource<T: Any>(self, v: Res<T>) -> Self {
+        self.container.borrow_mut().bind(v);
         self
     }
 
@@ -142,7 +149,14 @@ where
     /// }
     /// ````
     pub fn insert_state<T: Any>(self, v: T) -> Self {
-        self.container.borrow_mut().bind(State::new(v));
+        self.bind_state(State::new(v))
+    }
+
+    /// Binds an existing state to the application.
+    ///
+    /// Similar to `App::insert_state` but will accept an existing state
+    pub fn bind_state<T: Any>(self, v: State<T>) -> Self {
+        self.container.borrow_mut().bind(v);
         self
     }
 
@@ -245,5 +259,27 @@ impl Terminal {
     }
     pub fn size(&self) -> (u16, u16) {
         crossterm::terminal::size().unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "sync")]
+    #[test]
+    fn test_threaded_state() {
+        use crate::prelude::{App, State, ViewContext};
+
+        #[derive(Default)]
+        struct S {
+            i: i32,
+        }
+
+        let root_view = |_: &mut ViewContext| {};
+
+        let state = State::new(S::default());
+        App::new(root_view).bind_state(state.clone());
+        std::thread::spawn(move || {
+            state.get_mut().i = 10;
+        });
     }
 }
