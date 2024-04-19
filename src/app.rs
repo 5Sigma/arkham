@@ -278,8 +278,9 @@ mod tests {
 
         let state = State::new(S::default());
         App::new(root_view).bind_state(state.clone());
-        std::thread::spawn(move || {
-            state.get_mut().i = 10;
-        });
+        is_send(state);
     }
+
+    #[allow(dead_code)]
+    fn is_send(v: impl Send) {}
 }
