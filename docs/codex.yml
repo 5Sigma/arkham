@@ -12,4 +12,4 @@ repo_url: https://github.com/5sigma/arkham
 # in the header.
 project_url: ~
 # Base URL can be set if the site is hosted in a sub path.
-base_url: /arkham
+base_url: /
