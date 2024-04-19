@@ -38,7 +38,7 @@ impl Renderer {
 ///
 /// Setting up a basic application:
 ///
-/// ```
+/// ```no_run
 /// use arkham::prelude::*;
 ///
 /// fn main() {

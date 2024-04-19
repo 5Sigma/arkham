@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_vertical_insert() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.vertical_stack((10, 2).into());
+        let mut stack = ctx.vertical_stack((10, 2));
         stack.insert("one");
         stack.insert("two");
         assert_eq!(
@@ -190,7 +190,7 @@ mod tests {
     #[test]
     fn test_horizontal_insert() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.horizontal_stack((10, 1).into());
+        let mut stack = ctx.horizontal_stack((10, 1));
         stack.insert("one");
         stack.insert("two");
         assert_eq!(stack.view.render_text(), "onetwo\0\0\0\0\n".to_string());
@@ -199,7 +199,7 @@ mod tests {
     #[test]
     fn test_component() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.horizontal_stack((10, 2).into());
+        let mut stack = ctx.horizontal_stack((10, 2));
         stack.component((10, 2), |ctx: &mut ViewContext| {
             ctx.insert((3, 1), "one");
         });
@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn test_align_left() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.vertical_stack((10, 2).into());
+        let mut stack = ctx.vertical_stack((10, 2));
         stack.component((5, 1), |ctx: &mut ViewContext| {
             ctx.insert((0, 0), "one");
         });
@@ -226,7 +226,7 @@ mod tests {
     #[test]
     fn test_align_right() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.vertical_stack((10, 3).into());
+        let mut stack = ctx.vertical_stack((10, 3));
         stack.alignment = StackAlignment::Right;
         stack.insert("one");
         stack.component((5, 1), |ctx: &mut ViewContext| {
@@ -248,7 +248,7 @@ mod tests {
     #[test]
     fn test_align_center_v() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.vertical_stack((10, 3).into());
+        let mut stack = ctx.vertical_stack((10, 3));
         stack.alignment = StackAlignment::Center;
         stack.insert("one");
         stack.component((5, 1), |ctx: &mut ViewContext| {
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn test_align_top() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.horizontal_stack((9, 6).into());
+        let mut stack = ctx.horizontal_stack((9, 6));
         stack.component((3, 1), |ctx: &mut ViewContext| {
             ctx.insert((0, 0), "one");
         });
@@ -292,7 +292,7 @@ mod tests {
     #[test]
     fn test_align_bottom() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.horizontal_stack((9, 6).into());
+        let mut stack = ctx.horizontal_stack((9, 6));
         stack.alignment(StackAlignment::Bottom);
         stack.component((3, 1), |ctx: &mut ViewContext| {
             ctx.insert((0, 0), "one");
@@ -315,7 +315,7 @@ mod tests {
     #[test]
     fn test_align_center_h() {
         let ctx = crate::context::tests::context_fixture();
-        let mut stack = ctx.horizontal_stack((9, 6).into());
+        let mut stack = ctx.horizontal_stack((9, 6));
         stack.alignment(StackAlignment::Center);
         stack.component((3, 1), |ctx: &mut ViewContext| {
             ctx.insert((0, 0), "one");

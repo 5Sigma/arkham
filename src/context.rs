@@ -55,21 +55,27 @@ impl ViewContext {
         self.rerender = true;
     }
 
-    pub fn vertical_stack(&self, size: Size) -> Stack {
+    pub fn vertical_stack<S>(&self, size: S) -> Stack
+    where
+        S: Into<Size>,
+    {
         Stack {
             direction: crate::stack::StackDirection::Vertical,
             container: self.container.clone(),
-            view: View::new(size),
+            view: View::new(size.into()),
             position: Pos::from(0),
             alignment: crate::stack::StackAlignment::Top,
         }
     }
 
-    pub fn horizontal_stack(&self, size: Size) -> Stack {
+    pub fn horizontal_stack<S>(&self, size: S) -> Stack
+    where
+        S: Into<Size>,
+    {
         Stack {
             direction: crate::stack::StackDirection::Horizontal,
             container: self.container.clone(),
-            view: View::new(size),
+            view: View::new(size.into()),
             position: Pos::from(0),
             alignment: crate::stack::StackAlignment::Left,
         }

@@ -243,3 +243,13 @@ impl From<Size> for Rect {
         Rect::with_size(value)
     }
 }
+
+impl<P, S> From<(P, S)> for Rect
+where
+    P: Into<Pos>,
+    S: Into<Size>,
+{
+    fn from(value: (P, S)) -> Self {
+        Rect::new(value.0.into(), value.1.into())
+    }
+}

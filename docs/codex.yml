@@ -1,0 +1,15 @@
+# Project name
+name: Arkham CLI Library
+# The author displayed on the title page during PDF generation
+author: ~
+# The path relative to the project root where the compiled static site files
+# will be placed
+build_path: dist
+# The URL to the code repository for the project. If specified a link will appear
+# in the site header.
+repo_url: https://github.com/5sigma/arkham
+# The URL to the main project page. If specified a home link will be displayed
+# in the header.
+project_url: ~
+# Base URL can be set if the site is hosted in a sub path.
+base_url: /arkham
