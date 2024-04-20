@@ -266,21 +266,21 @@ impl Terminal {
 mod tests {
     #[cfg(feature = "sync")]
     #[test]
-    fn test_threaded_state() {
+    fn test_state_send() {
         use crate::prelude::{App, State, ViewContext};
 
         #[derive(Default)]
         struct S {
+            #[allow(dead_code)]
             i: i32,
         }
 
         let root_view = |_: &mut ViewContext| {};
 
         let state = State::new(S::default());
-        App::new(root_view).bind_state(state.clone());
         is_send(state);
     }
 
     #[allow(dead_code)]
-    fn is_send(v: impl Send) {}
+    fn is_send(_: impl Send) {}
 }

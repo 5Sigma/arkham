@@ -1,5 +1,3 @@
-use crossterm::style::Color;
-
 use crate::{
     geometry::{Pos, Rect, Size},
     runes::{Rune, Runes},
