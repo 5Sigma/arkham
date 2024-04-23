@@ -47,12 +47,31 @@ name = "external"
 path = "examples/threading.rs"
 required-features = ["sync"]
 
+[[example]]
+name = "custom quit"
+path = "examples/custom_quit.rs"
+
+[[example]]
+name = "todo"
+path = "examples/todo.rs"
+
+[[bench]]
+name = "view_apply"
+harness = false
+
+
 
 [dependencies]
 anyhow = "1.0.71"
 crossterm = "0.27"
 ctrlc = "3.3.1"
+log = { version = "0.4.21", optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+chrono = "*"
 
 [features]
 sync = []
 default = []
+log = ["dep:log"]

@@ -210,7 +210,7 @@ impl Rect {
     /// Example:
     ///
     /// ```
-    /// use arkham::prelude::*;
+    /// use arkham::prelude::*;l
     ///
     /// let mut rect = Rect::new((0,0), (15,5));
     /// rect.translate(5,0);
@@ -235,6 +235,15 @@ impl Rect {
     pub fn expand(&mut self, width: i32, height: i32) {
         self.size.width = (self.size.width as i32 + width).max(1) as usize;
         self.size.height = (self.size.height as i32 + height).max(1) as usize;
+    }
+
+    /// Pads the rect increasing (or decreasing) its size while
+    /// attempting to maintain the center point
+    pub fn pad(&mut self, width: i32, height: i32) {
+        self.size.width = (self.size.width as i32 + width).max(0) as usize;
+        self.size.height = (self.size.height as i32 + height).max(0) as usize;
+        self.pos.x = (self.pos.x as i32 + width / -2).max(0) as usize;
+        self.pos.y = (self.pos.y as i32 + height / -2).max(0) as usize;
     }
 }
 

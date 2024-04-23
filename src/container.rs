@@ -10,6 +10,8 @@ use std::{
     ops::Deref,
 };
 
+pub type ContainerRef = Rc<RefCell<Container>>;
+
 use crate::context::ViewContext;
 
 /// The container stores typed resource and state objects and provides
@@ -162,7 +164,10 @@ impl<T: ?Sized> Deref for Res<T> {
 
 impl<T: ?Sized + 'static> FromContainer for Res<T> {
     fn from_container(container: &Container) -> Self {
-        container.get::<Self>().expect("type not found").clone()
+        container
+            .get::<Self>()
+            .expect(&format!("type not found: {}", std::any::type_name::<T>()))
+            .clone()
     }
 }
 

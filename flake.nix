@@ -13,6 +13,7 @@
           pkgs.rust-analyzer
           pkgs.rustfmt
           pkgs.cargo-watch
+          pkgs.gnuplot
         ];
       };
     };

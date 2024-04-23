@@ -15,8 +15,10 @@ use crossterm::{
 };
 
 use crate::{
-    container::{Callable, Container, FromContainer, Res, State},
+    container::{Callable, Container, ContainerRef, FromContainer, Res, State},
     context::ViewContext,
+    plugins::Plugin,
+    runes::Rune,
     view::View,
 };
 
@@ -30,6 +32,16 @@ pub struct Renderer {
 impl Renderer {
     pub fn render(&self) {
         let _ = self.tx.send(());
+    }
+}
+
+struct AppOptions {
+    q_to_quit: bool,
+}
+
+impl Default for AppOptions {
+    fn default() -> Self {
+        Self { q_to_quit: true }
     }
 }
 
@@ -54,12 +66,15 @@ where
     F: Callable<Args>,
     Args: FromContainer,
 {
-    container: Rc<RefCell<Container>>,
+    options: AppOptions,
+    container: ContainerRef,
     main_view: View,
+    current_view_state: Vec<Vec<Rune>>,
     render_signal: Receiver<()>,
     render_tx: Sender<()>,
     root: F,
     args: PhantomData<Args>,
+    plugins: Rc<RefCell<Vec<Box<dyn crate::plugins::Plugin>>>>,
 }
 
 impl<F, Args> App<F, Args>
@@ -75,14 +90,26 @@ where
         let size = terminal::size().unwrap();
         let main_view = View::new(size);
         let (render_tx, render_signal) = channel();
+
         App {
             container,
             root,
             main_view,
+            current_view_state: vec![vec![Rune::default(); size.0 as usize]; size.1 as usize],
             render_tx,
             render_signal,
+            options: AppOptions::default(),
             args: PhantomData,
+            plugins: Rc::new(RefCell::new(vec![])),
         }
+    }
+
+    /// Disables the default handling of the 'q' key to quit the application
+    ///
+    /// NOTE: You will need to manually handle quitting via the ViewContext::exit function.
+    pub fn disbale_q_to_quit(mut self) -> Self {
+        self.options.q_to_quit = false;
+        self
     }
 
     /// Returns a renderer that can signal the application to rerender. This
@@ -91,6 +118,11 @@ where
         Renderer {
             tx: self.render_tx.clone(),
         }
+    }
+
+    pub fn insert_plugin(self, plugin: impl Plugin + 'static) -> Self {
+        self.plugins.borrow_mut().push(Box::new(plugin));
+        self
     }
 
     /// Insert a resource which can be injected into component functions.
@@ -160,13 +192,6 @@ where
         self
     }
 
-    /// Repairs the terminal state so it operates properly.  
-    fn teardown(&self) {
-        let mut out = std::io::stdout();
-        let _ = terminal::disable_raw_mode();
-        let _ = execute!(out, terminal::LeaveAlternateScreen, cursor::Show);
-    }
-
     /// Executes the main run loop. This should be called to start the
     /// application logic.
     ///
@@ -175,6 +200,17 @@ where
     pub fn run(&mut self) -> anyhow::Result<()> {
         self.container.borrow_mut().bind(Res::new(Terminal));
         self.container.borrow_mut().bind(Res::new(Keyboard::new()));
+
+        let _result = std::panic::catch_unwind(teardown);
+        let default_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            teardown();
+            default_hook(info);
+        }));
+
+        for plugin in self.plugins.borrow_mut().iter_mut() {
+            plugin.build(self.container.clone());
+        }
 
         let _ = ctrlc::set_handler(|| {
             let mut out = std::io::stdout();
@@ -186,20 +222,74 @@ where
         let mut out = std::io::stdout();
         execute!(out, terminal::EnterAlternateScreen, cursor::Hide)?;
         terminal::enable_raw_mode()?;
+        self.render()?;
 
         loop {
-            loop {
-                let mut context =
-                    ViewContext::new(self.container.clone(), terminal::size().unwrap().into());
-
-                self.root
-                    .call(&mut context, Args::from_container(&self.container.borrow()));
-                self.main_view.apply((0, 0), &context.view);
-                self.render()?;
-
-                if !context.rerender {
-                    break;
+            if crossterm::event::poll(Duration::from_millis(1000)).unwrap_or(false) {
+                if let Ok(event) = crossterm::event::read() {
+                    match event {
+                        Event::FocusGained => self.render()?,
+                        Event::FocusLost => {}
+                        Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
+                            if self.options.q_to_quit {
+                                break;
+                            }
+                        }
+                        Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                            {
+                                let container = self.container.borrow();
+                                let kb = container.get::<Res<Keyboard>>().unwrap();
+                                kb.set_key(key_event.code);
+                                kb.set_modifiers(key_event.modifiers);
+                            }
+                            self.render()?;
+                            self.render()?;
+                        }
+                        Event::Mouse(_) => todo!(),
+                        Event::Paste(_) => todo!(),
+                        Event::Resize(col, row) => {
+                            self.main_view.0 =
+                                vec![vec![Rune::default(); col as usize]; row as usize];
+                            self.current_view_state =
+                                vec![vec![Rune::default(); col as usize]; row as usize];
+                            self.clear()?;
+                            self.render()?
+                        }
+                        _ => {}
+                    }
                 }
+            }
+            if self.render_signal.try_recv().is_ok() {
+                self.render()?;
+                self.render()?;
+            }
+        }
+        teardown();
+
+        Ok(())
+    }
+
+    fn render(&mut self) -> anyhow::Result<()> {
+        loop {
+            let mut context = ViewContext::new(self.container.clone(), self.main_view.size());
+
+            for plugin in self.plugins.borrow().iter() {
+                plugin.before_render(&mut context, self.container.clone());
+            }
+
+            self.root
+                .call(&mut context, Args::from_container(&self.container.borrow()));
+
+            if context.should_exit {
+                teardown();
+                std::process::exit(0);
+            }
+
+            self.main_view.apply((0, 0), &context.view);
+
+            for plugin in self.plugins.borrow().iter() {
+                plugin.after_render(&mut context, self.container.clone());
+                self.main_view.apply((0, 0), &context.view);
             }
 
             self.container
@@ -208,47 +298,41 @@ where
                 .unwrap()
                 .reset();
 
-            if crossterm::event::poll(Duration::from_millis(100)).unwrap_or(false) {
-                if let Ok(event) = crossterm::event::read() {
-                    match event {
-                        Event::FocusGained => self.render()?,
-                        Event::FocusLost => {}
-                        Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
-                            break;
-                        }
-                        Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                            let container = self.container.borrow();
-                            let kb = container.get::<Res<Keyboard>>().unwrap();
-                            kb.set_key(key_event.code);
-                            kb.set_modifiers(key_event.modifiers);
-                        }
-                        Event::Mouse(_) => todo!(),
-                        Event::Paste(_) => todo!(),
-                        Event::Resize(_, _) => self.render()?,
-                        _ => {}
-                    }
-                }
-            }
-            if self.render_signal.try_recv().is_ok() {
-                self.render()?;
+            if !context.rerender {
+                break;
             }
         }
-        self.teardown();
 
-        Ok(())
-    }
-
-    fn render(&mut self) -> anyhow::Result<()> {
         let mut out = std::io::stdout();
         for (row, line) in self.main_view.iter().enumerate() {
             for (col, rune) in line.iter().enumerate() {
-                queue!(out, cursor::MoveTo(col as u16, row as u16))?;
-                rune.render(&mut out)?;
+                if &self.current_view_state[row][col] != rune {
+                    queue!(out, cursor::MoveTo(col as u16, row as u16))?;
+                    rune.render(&mut out)?;
+                    self.current_view_state[row][col] = *rune;
+                }
             }
         }
         out.flush()?;
         Ok(())
     }
+
+    fn clear(&self) -> anyhow::Result<()> {
+        let mut out = std::io::stdout();
+        execute!(
+            out,
+            crossterm::terminal::Clear(crossterm::terminal::ClearType::All)
+        )?;
+        out.flush()?;
+        Ok(())
+    }
+}
+
+/// Repairs the terminal state so it operates properly.
+fn teardown() {
+    let mut out = std::io::stdout();
+    let _ = terminal::disable_raw_mode();
+    let _ = execute!(out, terminal::LeaveAlternateScreen, cursor::Show);
 }
 
 pub struct Terminal;

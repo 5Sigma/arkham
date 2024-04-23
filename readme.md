@@ -38,6 +38,8 @@ easy enough that they aren't necessary.
 
 # Components are simple functions
 
+No lifetimes, structs, or traits.
+
 ```Rust
 fn my_component(ctx &mut ViewContext) {
     ctx.insert((0,0), "Welcome");
@@ -46,6 +48,8 @@ fn my_component(ctx &mut ViewContext) {
 
 
 # Easily handle text styling
+
+Color and style display-able objects with a simple builder pattern.
 
 ```Rust
 fn my_component(ctx &mut ViewContext) {
@@ -62,8 +66,14 @@ fn my_component(ctx &mut ViewContext) {
 
 # Painless dependency injection
 
+Get access to application state, or arbitrary defined resources without having to keep track of and pass them into components.
+
 ```Rust
-fn my_component(ctx &mut ViewContext, user: Res<MyUser>) {
+fn root_component(ctx: &mut ViewContext) {
+    ctx.component(Rect::new((0,0), (10,10)), sub_component):
+}
+
+fn sub_component(ctx &mut ViewContext, user: Res<MyUser>) {
     ctx.insert(
         (0,0), 
         format!("Hello, {}", user.name),
@@ -72,6 +82,8 @@ fn my_component(ctx &mut ViewContext, user: Res<MyUser>) {
 ```
 
 # Easy keyboard handling
+
+Straight forward keyboard handling 
 
 ```Rust
 fn my_component(ctx &mut ViewContext, kb: Res<Keyboard>) {
@@ -83,8 +95,6 @@ fn my_component(ctx &mut ViewContext, kb: Res<Keyboard>) {
     }
 }
 ```
-
-
 
 
 

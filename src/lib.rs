@@ -3,11 +3,17 @@ mod container;
 mod context;
 mod geometry;
 mod input;
+pub mod plugins;
 mod runes;
 mod stack;
 pub mod symbols;
 mod theme;
 mod view;
+
+pub mod internal {
+    pub use super::container::{Container, ContainerRef};
+    pub use super::view::View;
+}
 
 pub mod prelude {
     pub use super::{

@@ -18,6 +18,7 @@ use super::{
 pub struct ViewContext {
     pub view: View,
     pub container: Rc<RefCell<Container>>,
+    pub(crate) should_exit: bool,
     pub(crate) rerender: bool,
 }
 
@@ -46,7 +47,13 @@ impl ViewContext {
             view,
             container,
             rerender: false,
+            should_exit: false,
         }
+    }
+
+    // Exit the run loop and quit the application.
+    pub fn exit(&mut self) {
+        self.should_exit = true;
     }
 
     /// Notify the application to rerender the view. This is useful after a
