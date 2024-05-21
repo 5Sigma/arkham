@@ -1,6 +1,6 @@
 [package]
 name = "arkham"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 description = "TUI made simple"
 authors = ["Joe Bellus"]
@@ -48,12 +48,17 @@ path = "examples/threading.rs"
 required-features = ["sync"]
 
 [[example]]
-name = "custom quit"
+name = "customquit"
 path = "examples/custom_quit.rs"
 
 [[example]]
 name = "todo"
 path = "examples/todo.rs"
+
+[[example]]
+name = "logview"
+path = "examples/logview.rs"
+required-features = ["log"]
 
 [[bench]]
 name = "view_apply"
@@ -66,6 +71,7 @@ anyhow = "1.0.71"
 crossterm = "0.27"
 ctrlc = "3.3.1"
 log = { version = "0.4.21", optional = true }
+chrono = { version = "*", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
@@ -73,5 +79,5 @@ chrono = "*"
 
 [features]
 sync = []
-default = []
-log = ["dep:log"]
+default = ["log"]
+log = ["dep:log", "dep:chrono"]
