@@ -1,8 +1,6 @@
 use crossterm::{
     queue,
-    style::{
-        Attribute, Color, Print, ResetColor, SetAttribute, SetBackgroundColor, SetForegroundColor,
-    },
+    style::{Attribute, Color, Print, SetAttribute, SetBackgroundColor, SetForegroundColor},
 };
 
 /// Rune repesents the state of the screen at a specific position. It stores
@@ -13,6 +11,9 @@ pub struct Rune {
     pub fg: Option<Color>,
     pub bg: Option<Color>,
     pub bold: bool,
+    pub italic: bool,
+    pub underline: bool,
+    pub undercurl: bool,
 }
 
 impl std::fmt::Debug for Rune {
@@ -102,16 +103,51 @@ impl Rune {
         self
     }
 
-    /// Set the text color of the rune.
+    /// Set the text to bold weight
     ///
     /// Example:
     /// ```
     /// use arkham::prelude::*;
-    /// let rune = Rune::new().fg(Color::Green);
-    /// assert_eq!(rune.fg, Some(Color::Green));
+    /// let rune = Rune::new().bold();
     /// ```
     pub fn bold(mut self) -> Self {
         self.bold = true;
+        self
+    }
+
+    /// Set the text to italic styling
+    ///
+    /// Example:
+    /// ```
+    /// use arkham::prelude::*;
+    /// let rune = Rune::new().italic();
+    /// ```
+    pub fn italic(mut self) -> Self {
+        self.italic = true;
+        self
+    }
+
+    /// Set the text to underline style
+    ///
+    /// Example:
+    /// ```
+    /// use arkham::prelude::*;
+    /// let rune = Rune::new().underline();
+    /// ```
+    pub fn underline(mut self) -> Self {
+        self.underline = true;
+        self
+    }
+
+    /// Set the text to undercurl style
+    ///
+    /// Example:
+    /// ```
+    /// use arkham::prelude::*;
+    /// let rune = Rune::new().undercurl();
+    /// ```
+    pub fn undercurl(mut self) -> Self {
+        self.undercurl = true;
         self
     }
 
@@ -120,18 +156,37 @@ impl Rune {
     where
         W: std::io::Write,
     {
+        if let Some(c) = self.fg {
+            queue!(out, SetForegroundColor(c))?;
+        } else {
+            queue!(out, SetForegroundColor(Color::Red))?;
+        }
+
+        if let Some(c) = self.bg {
+            queue!(out, SetBackgroundColor(c))?;
+        } else {
+            queue!(out, SetBackgroundColor(Color::Reset))?;
+        }
+
+        if self.bold {
+            queue!(out, SetAttribute(Attribute::Bold))?;
+        }
+
+        if self.italic {
+            queue!(out, SetAttribute(Attribute::Italic))?;
+        }
+
+        if self.underline {
+            queue!(out, SetAttribute(Attribute::Underlined))?;
+        }
+
+        if self.undercurl {
+            queue!(out, SetAttribute(Attribute::Undercurled))?;
+        }
         if let Some(content) = self.content {
-            queue!(out, ResetColor)?;
-            if let Some(c) = self.fg {
-                queue!(out, SetForegroundColor(c))?;
-            }
-            if let Some(c) = self.bg {
-                queue!(out, SetBackgroundColor(c))?;
-            }
-            if self.bold {
-                queue!(out, SetAttribute(Attribute::Bold))?;
-            }
             queue!(out, Print(content))?;
+        } else {
+            queue!(out, Print(' '))?;
         }
         Ok(())
     }
@@ -267,13 +322,7 @@ pub trait ToRuneExt {
     fn to_runes(&self) -> Runes;
 }
 
-impl ToRuneExt for String {
-    fn to_runes(&self) -> Runes {
-        Runes::from(self.to_string())
-    }
-}
-
-impl ToRuneExt for &str {
+impl<T: ToString> ToRuneExt for T {
     fn to_runes(&self) -> Runes {
         Runes::from(self.to_string())
     }

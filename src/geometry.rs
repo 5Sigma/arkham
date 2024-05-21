@@ -210,7 +210,7 @@ impl Rect {
     /// Example:
     ///
     /// ```
-    /// use arkham::prelude::*;l
+    /// use arkham::prelude::*;
     ///
     /// let mut rect = Rect::new((0,0), (15,5));
     /// rect.translate(5,0);

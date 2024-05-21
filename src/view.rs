@@ -44,7 +44,7 @@ impl View {
         for (y, line) in view.0.iter().enumerate() {
             if self.0.len() > y + pos.y {
                 for (x, rune) in line.iter().enumerate() {
-                    if rune.content.is_some() && self.0[y].len() > x + pos.x {
+                    if self.0[y].len() > x + pos.x {
                         let rune = (self.0[y + pos.y][x + pos.x]) + *rune;
                         let _ = std::mem::replace(&mut self.0[y + pos.y][x + pos.x], rune);
                     }
